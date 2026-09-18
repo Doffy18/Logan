@@ -56,6 +56,7 @@ class CodeASTVisitor(ast.NodeVisitor):
 
     
 
+
 def _process_callable(self, node, symbol_type: str):
         docstring = ast.get_docstring(node)
         code_chunk = "\n".join(self.source_lines[node.lineno - 1 : node.end_lineno])
@@ -74,6 +75,8 @@ def _process_callable(self, node, symbol_type: str):
             }
         })
 
+
+
 def parse_python_file(path: Path):
     """Safely reads and parses a Python file into symbols and code chunks."""
     try:
@@ -87,12 +90,20 @@ def parse_python_file(path: Path):
         print(f" [Parse Error] Failed to parse {path}: {e}")
         return [], []
 
+
+
 def get_ollama_embedding(text: str, model: str = 'nomic-embed-text') -> List[float]:
     """Generates vector embeddings via local Ollama instance."""
     response = ollama.embeddings(model = model, prompt = text)
     return response['embedding']
 
 
+
+
+DEFAULT_IGNORE_DIRS: Set[str] = {
+    ".git", "__pycache__", ".venv", "venv", "env", 
+    ".pytest_cache", ".mypy_cache", "build", "dist", ".egg-info", "chroma_db"
+}
 def scan_directory(root_dir: str, ignore_dirs: Set[str] = DEFAULT_IGNORE_DIRS) -> List[Path]:
     """Recursively walks through folders to discover all valid Python files."""
     python_files = []
@@ -124,7 +135,7 @@ def process_codebase(root_dir: str, sqlite_conn: sqlite3.Connection, chroma_coll
         if not symbols and not chunks:
             continue
 
-        # 1. Update SQLite Metadata
+        # Update SQLite Metadata
         cursor = sqlite_conn.cursor()
         cursor.execute("INSERT OR REPLACE INTO files (filepath) VALUES (?)", (str_path,))
         cursor.execute("DELETE FROM symbols WHERE filepath = ?", (str_path,))
@@ -137,7 +148,7 @@ def process_codebase(root_dir: str, sqlite_conn: sqlite3.Connection, chroma_coll
             )
         sqlite_conn.commit()
 
-        # 2. Generate Embeddings & Upsert to ChromaDB
+        # Generate Embeddings & Upsert to ChromaDB
         for chunk in chunks:
             vector = get_ollama_embedding(chunk["text"])
             chroma_collection.upsert(
@@ -155,9 +166,7 @@ def process_codebase(root_dir: str, sqlite_conn: sqlite3.Connection, chroma_coll
 if __name__ == "__main__":
     db_conn = init_sqlite()
     vector_coll = init_chroma_db()
-
     # Pass any project folder path here (e.g., "." for current project directory)
     project_root = "." 
     process_codebase(project_root, db_conn, vector_coll)
-
     db_conn.close()
