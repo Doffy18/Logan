@@ -2,7 +2,7 @@ import os
 import ast
 from pathlib import Path
 from typing import Dict, List, Any, Set
-import ollama
+import ollama, sqlite3
 from ingestion.database import init_chroma_db, init_sqlite
 
 class CodeASTVisitor(ast.NodeVisitor):
@@ -125,7 +125,7 @@ def scan_directory(root_dir: str, ignore_dirs: Set[str] = DEFAULT_IGNORE_DIRS) -
 def process_codebase(root_dir: str, sqlite_conn: sqlite3.Connection, chroma_collection):
     """Walks the folder tree, parses files, and updates SQLite and ChromaDB."""
     target_files = scan_directory(root_dir)
-    print(f"🔍 Discovered {len(target_files)} Python files across directories in: {root_dir}\n")
+    print(f" Discovered {len(target_files)} Python files across directories in: {root_dir}\n")
 
     for filepath in target_files:
         str_path = str(filepath)
@@ -163,10 +163,10 @@ def process_codebase(root_dir: str, sqlite_conn: sqlite3.Connection, chroma_coll
 
 
 
-if __name__ == "__main__":
-    db_conn = init_sqlite()
-    vector_coll = init_chroma_db()
-    # Pass any project folder path here (e.g., "." for current project directory)
-    project_root = "." 
-    process_codebase(project_root, db_conn, vector_coll)
-    db_conn.close()
+# if __name__ == "__main__":
+#     db_conn = init_sqlite()
+#     vector_coll = init_chroma_db()
+#     # Pass any project folder path here (e.g., "." for current project directory)
+#     project_root = "." 
+#     process_codebase(project_root, db_conn, vector_coll)
+#     db_conn.close()
