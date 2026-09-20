@@ -1,6 +1,6 @@
 # ⚡ Local Codebase Context Engine & CLI Agent (`logan`)
 
-> **Version 1.0.0** | *A $0-Budget, Local-First Codebase Search & RAG Tool for your Terminal*
+> **Version 1.0.0** | *A $0-Budget, Local-First Codebase Search & RAG Tool for your Terminal* | **Functional Prototype**
 
 The **Local Codebase Context Engine** is a local-first developer tool and CLI agent designed to provide low-latency **codebase search, security filtering, and context retrieval** directly in the terminal.
 
