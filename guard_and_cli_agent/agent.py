@@ -37,7 +37,7 @@ def retrieve_context_from_dbs(query: str, db_path: str = "codebase_metadata.db")
     # Get active workspace directory set by CLI
     workspace_root = os.getenv("LOGAN_WORKSPACE_ROOT", os.getcwd())
 
-    # 1. DIRECT FILE LOOKUP CHECK: Did the user ask for a specific file (e.g. test.py)?
+    # DIRECT FILE LOOKUP CHECK: Did the user ask for a specific file (e.g. test.py)?
     file_matches = re.findall(r'[\w\-\/\\]+\.(?:py|json|md|txt|yaml|toml|sql)', query, re.IGNORECASE)
     if file_matches:
         context_blocks.append("--- DIRECT FILE READ (Workspace Filesystem) ---")
@@ -58,7 +58,7 @@ def retrieve_context_from_dbs(query: str, db_path: str = "codebase_metadata.db")
             else:
                 context_blocks.append(f"File '{file_name}' requested but not found on disk under {workspace_root}.")
 
-    # 2. EXACT QUOTED STRING SEARCH (Lookup strings like 'I love you Meenu' directly)
+    # EXACT QUOTED STRING SEARCH (Lookup strings directly)
     quoted_strings = re.findall(r"['\"](.*?)['\"]", query)
     if quoted_strings:
         exact_matches = []
