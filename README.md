@@ -1,13 +1,13 @@
 # ⚡ Local Codebase Context Engine & CLI Agent (`logan`)
 
-> **Version 1.0.0** | *A $0-Budget, Local-First Codebase Search & RAG Tool for your Terminal* | **Functional Prototype**
+ > **Version 1.0.0** | *A $0-Budget, Local-First Codebase Search & RAG Tool for your Terminal* | **Functional Prototype**
+
 
 The **Local Codebase Context Engine** is a local-first developer tool and CLI agent designed to provide low-latency **codebase search, security filtering, and context retrieval** directly in the terminal.
 
 The CLI command is **`logan`**.
 
 Instead of repeatedly uploading an entire repository to cloud-based AI tools or relying on expensive AI editor subscriptions, `logan` continuously indexes the local codebase and retrieves only the relevant code needed to answer a developer's question.
-
 The system combines **real-time file monitoring, SHA-256 delta caching, AST-based parsing, SQLite metadata indexing, ChromaDB vector search, local Ollama models, LlamaGuard security filtering, and LangGraph orchestration**.
 
 For final reasoning, `logan` uses **Gemini Flash through Google AI Studio's free tier**, sending only the relevant retrieved code context rather than the entire codebase.
@@ -26,7 +26,7 @@ For final reasoning, `logan` uses **Gemini Flash through Google AI Studio's free
 * 🔄 **LangGraph Orchestration** — Coordinates the stateful ingestion and processing workflow.
 * 🤖 **Gemini Flash Reasoning** — Uses Google AI Studio for final reasoning over small, retrieved context snippets.
 * 💻 **Interactive CLI** — Provides a terminal REPL through the `logan` command.
-* 📊 **Observability & Benchmarking** — Supports Logfire/Langfuse tracing and Locust-based load testing.
+* 📊 **Observability & Benchmarking** — Supports LangSmith Tracing
 * 💰 **$0-Budget Architecture** — Uses local open-source infrastructure and free-tier cloud reasoning.
 
 ---
@@ -512,7 +512,7 @@ Rich can be used to provide formatted terminal output, progress indicators, and 
 | **Vector DB**     | ChromaDB                    | Semantic code search            | Local            |
 | **Security**      | Ollama + `llama-guard3:1b`  | Prompt/security filtering       | Local            |
 | **Reasoning**     | Gemini Flash                | Final reasoning                 | Google AI Studio |
-| **Observability** | Logfire / Langfuse          | Tracing and latency analysis    | Free Tier        |
+| **Observability** | LangSmith                   | Tracing and latency analysis    | Free Tier        |
 | **Benchmarking**  | Locust                      | Load and throughput testing     | Local            |
 
 ---
@@ -536,7 +536,7 @@ The following components run locally:
 * LangGraph
 * Click
 * Rich
-* Locust
+* LangSmith
 
 ### Free Tier
 
@@ -547,8 +547,7 @@ The reasoning layer uses:
 
 Observability can use free-tier options such as:
 
-* Logfire
-* Langfuse
+* LangSmith
 
 > API quotas and free-tier limits are subject to the respective service providers and may change over time.
 
@@ -700,55 +699,10 @@ logan ❯ explain the security flow before retrieval
 
 # 📊 Observability & Benchmarking
 
-The system can be instrumented to measure the performance of individual pipeline stages.
+The system can be instrumented to trace the performance of individual pipeline stages.
 
-Potential measurements include:
-
-* File watcher latency
-* SHA-256 hashing latency
-* Redis lookup latency
-* AST parsing latency
-* Embedding generation latency
-* SQLite lookup latency
-* ChromaDB retrieval latency
-* LlamaGuard security-check latency
-* Gemini API latency
-* End-to-end query latency
-* Query throughput
-
-Tracing can be implemented using:
-
-```text
-Logfire / Langfuse
-```
-
-Load testing can be performed with:
-
-```text
-Locust
-```
-
-Example benchmark flow:
-
-```text
-Locust
-   │
-   ▼
-Concurrent Queries
-   │
-   ▼
-logan
-   │
-   ├── Security
-   ├── Retrieval
-   ├── Context Assembly
-   └── Gemini
-   │
-   ▼
-Latency + Throughput Metrics
-```
-
----
+Tracing can be implemented using LangSmith:
+<img width="1390" height="913" alt="image" src="https://github.com/user-attachments/assets/0d3a809b-2d19-4e91-8e71-918276ba3cc0" />
 
 # ⚠️ Version 1.0 Limitations
 
@@ -799,46 +753,6 @@ Potential future versions could introduce:
 * ⚡ **Advanced Incremental Indexing** — Further optimize indexing for very large repositories.
 
 ---
-
-# 📁 High-Level Project Structure
-
-```text
-logan/
-│
-├── context_engine/
-│   │
-│   ├── cli/
-│   │   └── ...
-│   │
-│   ├── ingestion/
-│   │   ├── watcher.py
-│   │   ├── hasher.py
-│   │   ├── parser.py
-│   │   └── ...
-│   │
-│   ├── retrieval/
-│   │   ├── chroma.py
-│   │   ├── sqlite.py
-│   │   └── ...
-│   │
-│   ├── security/
-│   │   └── ...
-│   │
-│   ├── graph/
-│   │   └── ...
-│   │
-│   └── ...
-│
-├── tests/
-│
-├── locustfile.py
-├── requirements.txt
-├── pyproject.toml
-├── .env.example
-└── README.md
-```
-
-> The exact directory structure may vary depending on the implementation.
 
 ---
 
