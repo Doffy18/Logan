@@ -1,21 +1,52 @@
 import redis
-import pathlib as Path
+import subprocess
 import hashlib
+from pathlib import Path
 from typing import List, Tuple
 from ingestion.ast import get_ollama_embedding, parse_python_file, scan_directory, init_chroma_db, init_sqlite
 
-def init_redis()-> redis.Redis:
-    """Connects to the local Redis Docker container."""
+
+def ensure_redis_container() -> None:
+    """Checks if the Redis Docker container is running, starting or creating it automatically."""
+    try:
+        # Check if container named 'redis-cache' is running
+        status = subprocess.run(
+            ["docker", "inspect", "-f", "{{.State.Running}}", "redis-cache"],
+            capture_output=True,
+            text=True
+        ).stdout.strip()
+
+        if status == "true":
+            return  # Container is running
+
+        if status == "false":
+            print("🚀 Starting existing Redis Docker container...")
+            subprocess.run(["docker", "start", "redis-cache"], check=True)
+            return
+
+    except Exception:
+        pass  # Container doesn't exist yet; proceed to create it
+
+    print("📦 Spinning up new Redis Docker container...")
+    subprocess.run(
+        ["docker", "run", "-d", "-p", "6379:6379", "--name", "redis-cache", "redis:alpine"],
+        check=True
+    )
+
+
+def init_redis() -> redis.Redis:
+    """Connects to Redis, auto-starting the container if necessary."""
     try:
         r = redis.Redis(decode_responses=True)
         r.ping()
         print('connected to redis')
         return r
-
     except redis.ConnectionError:
-        print("Error: Could not connect to Redis. Ensure your container is running:")
-        print("  docker run -d -p 6379:6379 redis:alpine")
-        exit(1)
+        ensure_redis_container()
+        r = redis.Redis(decode_responses=True)
+        r.ping()
+        print('connected to redis')
+        return r
 
 
 def calculate_sha256(filepath: Path) -> str:
@@ -51,7 +82,7 @@ def process_single_file(filepath: Path, sqlite_conn, chroma_collection) -> None:
     if not symbols and not chunks:
         return
 
-    # Writting AST metadata to SQLite
+    # Writing AST metadata to SQLite
     cursor = sqlite_conn.cursor()
     cursor.execute("INSERT OR REPLACE INTO files (filepath) VALUES (?)", (str_path,))
     cursor.execute("DELETE FROM symbols WHERE filepath = ?", (str_path,))
@@ -74,8 +105,9 @@ def process_single_file(filepath: Path, sqlite_conn, chroma_collection) -> None:
             metadatas=[chunk["metadata"]]
         )
 
+
 def process_codebase_with_cache(root_dir: str, redis_client: redis.Redis, sqlite_conn, chroma_collection) -> None:
-    """ Scans directory and uses Redis delta caching to skip unchanged files. """
+    """Scans directory and uses Redis delta caching to skip unchanged files."""
     root_path = Path(root_dir).resolve()
     target_files = scan_directory(root_dir)
 
@@ -84,7 +116,7 @@ def process_codebase_with_cache(root_dir: str, redis_client: redis.Redis, sqlite
 
     for filepath in target_files:
         rel_path = filepath.relative_to(root_path)
-        changed,current_hash = is_file_changed(filepath, redis_client)
+        changed, current_hash = is_file_changed(filepath, redis_client)
 
         if not changed:
             print(f"⏩ [SKIPPED] {rel_path} (Hash Unchanged)")
@@ -92,14 +124,11 @@ def process_codebase_with_cache(root_dir: str, redis_client: redis.Redis, sqlite
             continue
         print(f"🔄 [PROCESSING] {rel_path} (Modified/New)")
 
-        process_single_file(filepath, sqlite_conn, chroma_collection) # ast parsing and embedding
-        update_redis_hash(filepath, current_hash, redis_client) # cache the new hash only after sucessfull processing
+        process_single_file(filepath, sqlite_conn, chroma_collection)  # ast parsing and embedding
+        update_redis_hash(filepath, current_hash, redis_client)  # cache hash after successful processing
         processed_count += 1
     print("-" * 50)
     print(f"Summary: {processed_count} processed, {skipped_count} skipped (cached).\n")
-
-
-
 
 
 if __name__ == "__main__":
@@ -107,9 +136,9 @@ if __name__ == "__main__":
     db_conn = init_sqlite()
     vector_coll = init_chroma_db()
 
-project_root = "."
-print("\n--- FIRST PASS ---")
-process_codebase_with_cache(project_root, redis_client, db_conn, vector_coll)
-print("\n--- SECOND PASS (Testing Cache Hits) ---")
-process_codebase_with_cache(project_root, redis_client, db_conn, vector_coll)
-db_conn.close()
+    project_root = "."
+    print("\n--- FIRST PASS ---")
+    process_codebase_with_cache(project_root, redis_client, db_conn, vector_coll)
+    print("\n--- SECOND PASS (Testing Cache Hits) ---")
+    process_codebase_with_cache(project_root, redis_client, db_conn, vector_coll)
+    db_conn.close()

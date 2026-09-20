@@ -54,10 +54,9 @@ class CodeASTVisitor(ast.NodeVisitor):
         })
         self.generic_visit(node)
 
-    
 
 
-def _process_callable(self, node, symbol_type: str):
+    def _process_callable(self, node, symbol_type: str):
         docstring = ast.get_docstring(node)
         code_chunk = "\n".join(self.source_lines[node.lineno - 1 : node.end_lineno])
         
@@ -94,7 +93,8 @@ def parse_python_file(path: Path):
 
 def get_ollama_embedding(text: str, model: str = 'nomic-embed-text') -> List[float]:
     """Generates vector embeddings via local Ollama instance."""
-    response = ollama.embeddings(model = model, prompt = text)
+    truncated_text = text[:6000]
+    response = ollama.embeddings(model = model, prompt = truncated_text)
     return response['embedding']
 
 
@@ -102,7 +102,7 @@ def get_ollama_embedding(text: str, model: str = 'nomic-embed-text') -> List[flo
 
 DEFAULT_IGNORE_DIRS: Set[str] = {
     ".git", "__pycache__", ".venv", "venv", "env", 
-    ".pytest_cache", ".mypy_cache", "build", "dist", ".egg-info", "chroma_db"
+    ".pytest_cache", ".mypy_cache", "build", "dist", ".egg-info", "chroma_db","logan"
 }
 def scan_directory(root_dir: str, ignore_dirs: Set[str] = DEFAULT_IGNORE_DIRS) -> List[Path]:
     """Recursively walks through folders to discover all valid Python files."""
