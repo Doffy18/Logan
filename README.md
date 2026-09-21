@@ -828,7 +828,12 @@ Together, these principles form the core `logan` pipeline:
 (Security Block)
 
 
-
+# Reference docs
+1) https://python-watchdog.readthedocs.io/en/stable/quickstart.html#a-simple-example
+2) https://redis.readthedocs.io/en/stable/
+3) https://docs.python.org/3/library/hashlib.html
+4) https://docs.python.org/3/library/sqlite3.html
+5) https://www.datacamp.com/tutorial/chromadb-tutorial-step-by-step-guide?utm_cid=19589720824&utm_aid=157156375671&utm_campaign=230119_1-ps-other~dsa-tofu~all_2-b2c_3-apac_4-prc_5-na_6-na_7-le_8-pdsh-go_9-nb-e_10-na_11-na&utm_loc=9149390-&utm_mtd=-c&utm_kw=&utm_source=google&utm_medium=paid_search&utm_content=ps-other~apac-en~dsa~tofu~tutorial~data-science&gad_source=1&gad_campaignid=19589720824&gbraid=0AAAAADQ9WsHgEFwH5nVm2RxvkIlbiZRna&gclid=CjwKCAjw_KjVBhAHEiwAnC0N9D49OyEvUyxfiTbOAv3kdnyoJqfhExGU6dp6deV8p_69vG8a3QzYUxoCKbYQAvD_BwE
 
 # 📄 License
 
